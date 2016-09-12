@@ -3,11 +3,14 @@
 class MaxLoadCalculator
 {
 
+  private static $isSortingRequired = false;
+
+  private static $defaultLoad = 0;
+
   private static $defaultCoordinates = [
     'load' => null,
     'unload' => null,
   ];
-  private static $defaultLoad = 0;
   private static $eventLoads = [
     '1' => 1,
     '0' => -1,
@@ -113,17 +116,26 @@ class MaxLoadCalculator
       SELF::insertLoadIntervalMiddle($curLoad, $dataArr[$i], $loadIntervals);
     }
   }
-  private static function insertPrecedingEventType(&$dataArr, &$id, &$precedingEventType, &$eventType, &$eventTypeRepeats) {
-    $eventTypeRepeatsDifference = $eventTypeRepeats[$eventType] - $eventTypeRepeats[$precedingEventType];
-    if ($eventTypeRepeatsDifference > 0) {
-      SELF::insertEventType($dataArr, $id, $precedingEventType, $eventTypeRepeatsDifference);
+  private static function insertPrecedingEventsInSorted(&$dataArr) {
+    $eventTypeRepeatsById = SELF::calculateEventTypeRepeatsById($dataArr);
+    SELF::updateDefaultCoordinates();
+    $precedingEvents = [];
+    foreach ($eventTypeRepeatsById as $id => $eventTypeRepeats) {
+      SELF::insertPrecedingEventTypes($precedingEvents, $id, $eventTypeRepeats);
     }
+    $dataArr = array_merge($precedingEvents, $dataArr);
   }
-  private static function insertPrecedingEvents(&$dataArr) {
+  private static function insertPrecedingEventsInUnsorted(&$dataArr) {
     $eventTypeRepeatsById = SELF::calculateEventTypeRepeatsById($dataArr);
     SELF::updateDefaultCoordinates();
     foreach ($eventTypeRepeatsById as $id => $eventTypeRepeats) {
       SELF::insertPrecedingEventTypes($dataArr, $id, $eventTypeRepeats);
+    }
+  }
+  private static function insertPrecedingEventType(&$dataArr, &$id, &$precedingEventType, &$eventType, &$eventTypeRepeats) {
+    $eventTypeRepeatsDifference = $eventTypeRepeats[$eventType] - $eventTypeRepeats[$precedingEventType];
+    if ($eventTypeRepeatsDifference > 0) {
+      SELF::insertEventType($dataArr, $id, $precedingEventType, $eventTypeRepeatsDifference);
     }
   }
   private static function insertPrecedingEventTypes(&$dataArr, &$id, &$eventTypeRepeats) {
@@ -152,8 +164,12 @@ class MaxLoadCalculator
     }
   }
   private static function prepareData(&$dataArr) {
-    SELF::insertPrecedingEvents($dataArr);
-    usort($dataArr, [get_called_class(), 'compareCoordinates']);
+    if (SELF::$isSortingRequired) {
+      SELF::insertPrecedingEventsInUnsorted($dataArr);
+      usort($dataArr, [get_called_class(), 'compareCoordinates']);
+    } else {
+      SELF::insertPrecedingEventsInSorted($dataArr);
+    }
   }
   private static function printLoadInterval(&$loadInterval) {
     printf(
