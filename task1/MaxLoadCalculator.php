@@ -45,33 +45,6 @@ class MaxLoadCalculator
     return SELF::$eventLoads[SELF::getObjEventType($curObj)];
   }
 
-  private static function insertLoadInterval(&$left, &$load, &$loadIntervals, &$right) {
-    $loadIntervals[] = [
-      'load' => $load,
-      'left' => $left,
-      'right' => $right,
-    ];
-  }
-  private static function insertLoadIntervalFirst(&$curLoad, &$loadIntervals) {
-    SELF::insertLoadInterval(SELF::$defaultCoordinates['load'], $curLoad, $loadIntervals, SELF::$defaultCoordinates['unload']);
-  }
-  private static function insertLoadIntervalMiddle(&$curLoad, &$curObj, &$loadIntervals) {
-    $curLoad += SELF::getObjLoad($curObj);
-    $lastLoadInterval = &SELF::getLastLoadInterval($loadIntervals);
-    $curObjCoordinate = SELF::getObjCoordinate($curObj);
-    if ($curObjCoordinate === $lastLoadInterval['left']) {
-      $lastLoadInterval['load'] = $curLoad;
-      SELF::mergeEqualLoadIntervals($loadIntervals);
-    } else {
-      $lastLoadInterval['right'] = $curObjCoordinate;
-      SELF::insertLoadInterval($curObjCoordinate, $curLoad, $loadIntervals, SELF::$defaultCoordinates['unload']);
-    }
-  }
-  private static function insertLoadIntervalsMiddle(&$curLoad, &$dataArr, &$loadIntervals) {
-    for ($i = 0, $len = count($dataArr); $i < $len; $i++) {
-      SELF::insertLoadIntervalMiddle($curLoad, $dataArr[$i], $loadIntervals);
-    }
-  }
   private static function calculateEventTypeRepeatsById(&$dataArr) {
     $eventTypeRepeatsById = [];
     foreach ($dataArr as $curObj) {
@@ -112,6 +85,33 @@ class MaxLoadCalculator
   }
   private static function incrementEventTypeRepeatsById(&$curObj, &$eventTypeRepeatsById) {
     $eventTypeRepeatsById[SELF::getObjId($curObj)][SELF::getObjEventType($curObj)]++;
+  }
+  private static function insertLoadInterval(&$left, &$load, &$loadIntervals, &$right) {
+    $loadIntervals[] = [
+      'load' => $load,
+      'left' => $left,
+      'right' => $right,
+    ];
+  }
+  private static function insertLoadIntervalFirst(&$curLoad, &$loadIntervals) {
+    SELF::insertLoadInterval(SELF::$defaultCoordinates['load'], $curLoad, $loadIntervals, SELF::$defaultCoordinates['unload']);
+  }
+  private static function insertLoadIntervalMiddle(&$curLoad, &$curObj, &$loadIntervals) {
+    $curLoad += SELF::getObjLoad($curObj);
+    $lastLoadInterval = &SELF::getLastLoadInterval($loadIntervals);
+    $curObjCoordinate = SELF::getObjCoordinate($curObj);
+    if ($curObjCoordinate === $lastLoadInterval['left']) {
+      $lastLoadInterval['load'] = $curLoad;
+      SELF::mergeEqualLoadIntervals($loadIntervals);
+    } else {
+      $lastLoadInterval['right'] = $curObjCoordinate;
+      SELF::insertLoadInterval($curObjCoordinate, $curLoad, $loadIntervals, SELF::$defaultCoordinates['unload']);
+    }
+  }
+  private static function insertLoadIntervalsMiddle(&$curLoad, &$dataArr, &$loadIntervals) {
+    for ($i = 0, $len = count($dataArr); $i < $len; $i++) {
+      SELF::insertLoadIntervalMiddle($curLoad, $dataArr[$i], $loadIntervals);
+    }
   }
   private static function insertPrecedingEventType(&$dataArr, &$id, &$precedingEventType, &$eventType, &$eventTypeRepeats) {
     $eventTypeRepeatsDifference = $eventTypeRepeats[$eventType] - $eventTypeRepeats[$precedingEventType];
