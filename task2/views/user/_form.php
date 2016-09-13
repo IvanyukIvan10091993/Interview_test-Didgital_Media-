@@ -11,7 +11,7 @@ use yii\widgets\ActiveForm;
 <div class="user-form">
 
     <?php $form = ActiveForm::begin([
-        'id' => 'contact-form',
+        'id' => 'user-form',
         'enableAjaxValidation' => true,
     ]); ?>
 
