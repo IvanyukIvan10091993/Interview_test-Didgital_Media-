@@ -8,7 +8,6 @@ use app\models\UserSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-
 use yii\web\Response;
 use yii\widgets\ActiveForm;
 
@@ -30,6 +29,16 @@ class UserController extends Controller
                 ],
             ],
         ];
+    }
+
+    public function actionAjaxValidation()
+    {
+        $model = new User();
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post()))
+        {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
     }
 
     /**
@@ -68,11 +77,7 @@ class UserController extends Controller
     {
         $model = new User();
 
-        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post()))
-        {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return ActiveForm::validate($model);
-        }
+        $this->actionAjaxValidation();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
@@ -93,11 +98,7 @@ class UserController extends Controller
     {
         $model = $this->findModel($id);
 
-        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post()))
-        {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return ActiveForm::validate($model);
-        }
+        $this->actionAjaxValidation();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
