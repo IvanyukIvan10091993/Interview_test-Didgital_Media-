@@ -25,6 +25,7 @@
 1. Залогиниться в mysql и удалить тестовую БД
   `mysql -u имяПользоателяБд -p`
   `DROP DATABASE IF EXISTS ivanivanyuk_task2;`
+
 ## Для проверки второго задания:
 1. Перейти в task2-v2/src
   `cd task2-v2/src`
